@@ -13,7 +13,7 @@ Powered by [MongoDB Go driver](https://github.com/mongodb/mongo-go-driver)
 
 ## Install
 
-TODO
+`go get -u github.com/Dongss/migrate-mongo`
 
 ## Usage
 
