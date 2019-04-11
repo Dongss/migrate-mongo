@@ -14,15 +14,16 @@ import (
 type MDB interface {
 	// Connect init db connections
 	Connect()
+
 	// Disconnect disconnect
 	Disconnect()
 
 	// Overview shows source mongo database collection info,
 	// includes document count, size, indexes
-	Overview(cln clnOpt) (migGoal, error)
+	Overview(cln ClnOpt)
 
 	// Migrate do mgrations and return result
-	Migrate(cln clnOpt, opt migOpt) (migResult, error)
+	Migrate(cln ClnOpt, opt migOpt)
 }
 
 type mdb struct {
@@ -50,13 +51,20 @@ func (m *mdb) Disconnect() {
 	_ = m.dstClient.Disconnect(ctx)
 }
 
-func (m mdb) Overview(cln clnOpt) (migGoal, error) {
-	return migGoal{}, nil
+func (m mdb) Overview(cln ClnOpt) {
+	log.Printf("Show collection details: %v", cln.ClnNames)
 }
 
-func (m mdb) Migrate(cln clnOpt, opt migOpt) (migResult, error) {
-	return migResult{}, nil
+func (m mdb) Migrate(cln ClnOpt, opt migOpt) {
 }
+
+// get all source db collections
+func (m mdb) collections() []string {
+	return []string{}
+}
+
+// get collection detail
+func clnDetail(clbName string) {}
 
 func conDatabase(uri string) (*mongo.Client, *mongo.Database) {
 	client, err := mongo.NewClient(MongoOpt.Client().ApplyURI(uri))

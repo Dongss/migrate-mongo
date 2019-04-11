@@ -4,11 +4,11 @@ import (
 	"time"
 )
 
-// collection options
-type clnOpt struct {
-	ifAll    bool     // if all collections
-	ifIndex  bool     // if include indexes
-	clnNames []string // collection names
+// ClnOpt is collection options
+type ClnOpt struct {
+	IfAll    bool     // if all collections
+	IfIndex  bool     // if include indexes
+	ClnNames []string // collection names
 }
 
 // migrate otions
