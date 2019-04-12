@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	MongoOpt "go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -53,6 +54,14 @@ func (m *mdb) Disconnect() {
 
 func (m mdb) Overview(cln ClnOpt) {
 	log.Printf("Show collection details: %v", cln.ClnNames)
+	clns := m.collections()
+	// check if collections exist
+	for _, n := range cln.ClnNames {
+		if con := contains(clns, n); !con {
+			log.Fatalf("Collection not found: %v", n)
+		}
+	}
+	log.Println("Not finished yet!")
 }
 
 func (m mdb) Migrate(cln ClnOpt, opt migOpt) {
@@ -60,7 +69,28 @@ func (m mdb) Migrate(cln ClnOpt, opt migOpt) {
 
 // get all source db collections
 func (m mdb) collections() []string {
-	return []string{}
+	ctx := context.Background()
+	cur, err := m.srcDb.ListCollections(ctx, bson.M{})
+	defer cur.Close(ctx)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	var r []string
+	for cur.Next(ctx) {
+		var elem struct {
+			Name string `bson:"name"`
+		}
+		if err := cur.Decode(&elem); err != nil {
+			log.Fatal(err)
+		}
+		r = append(r, elem.Name)
+	}
+
+	if err := cur.Err(); err != nil {
+		log.Fatal(err)
+	}
+	// log.Println(r)
+	return r
 }
 
 // get collection detail
