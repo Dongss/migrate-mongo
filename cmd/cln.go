@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/Dongss/migrate-mongo/mdb"
 	"github.com/spf13/cobra"
 )
@@ -27,6 +29,7 @@ var clnCmd = &cobra.Command{
 	Short: "Migrate specified collections",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println()
 		m := mdb.NewMDB(fSrc, fDst)
 		m.Connect()
 		defer m.Disconnect()

@@ -2,6 +2,7 @@ package mdb
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -53,15 +54,17 @@ func (m *mdb) Disconnect() {
 }
 
 func (m mdb) Overview(cln ClnOpt) {
-	log.Printf("Show collection details: %v", cln.ClnNames)
+	log.Printf("Collection details: %v", cln.ClnNames)
 	clns := m.collections()
 	// check if collections exist
 	for _, n := range cln.ClnNames {
 		if con := contains(clns, n); !con {
 			log.Fatalf("Collection not found: %v", n)
 		}
+		info := clnDetail(m.srcDb, n)
+		info.Print()
 	}
-	log.Println("Not finished yet!")
+	fmt.Println()
 }
 
 func (m mdb) Migrate(cln ClnOpt, opt migOpt) {
@@ -73,7 +76,7 @@ func (m mdb) collections() []string {
 	cur, err := m.srcDb.ListCollections(ctx, bson.M{})
 	defer cur.Close(ctx)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("Get collections error: ", err.Error())
 	}
 	var r []string
 	for cur.Next(ctx) {
@@ -89,17 +92,54 @@ func (m mdb) collections() []string {
 	if err := cur.Err(); err != nil {
 		log.Fatal(err)
 	}
-	// log.Println(r)
 	return r
 }
 
 // get collection detail
-func clnDetail(clbName string) {}
+func clnDetail(db *mongo.Database, clnName string) *clnInfo {
+	ctx := context.Background()
+	cln := db.Collection(clnName)
+	c, err := cln.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		log.Fatal("Get collection indexes error: ", err.Error())
+	}
+
+	indexes := cln.Indexes()
+	cur, err := indexes.List(ctx)
+	defer cur.Close(ctx)
+	if err != nil {
+		log.Fatal("Get collections error: ", err.Error())
+	}
+
+	var index []string
+
+	for cur.Next(ctx) {
+		var elem struct {
+			Key  interface{} `bson:"key"`
+			Name string      `bson:"name"`
+			Ns   string      `bson:"ns"`
+		}
+		if err := cur.Decode(&elem); err != nil {
+			log.Fatal("decode error: ", err.Error())
+		} else {
+			index = append(index, elem.Name)
+		}
+	}
+
+	if err := cur.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return &clnInfo{
+		Name:    clnName,
+		Count:   c,
+		Indexes: index,
+	}
+}
 
 func conDatabase(uri string) (*mongo.Client, *mongo.Database) {
 	client, err := mongo.NewClient(MongoOpt.Client().ApplyURI(uri))
 	if err != nil {
-		log.Fatal("connect mongo error, ", err.Error())
+		log.Fatal("Connect mongo error, ", err.Error())
 	}
 	tmp := strings.Split(uri, "/")
 	dbstr := tmp[len(tmp)-1]
@@ -107,7 +147,7 @@ func conDatabase(uri string) (*mongo.Client, *mongo.Database) {
 	defer cancel()
 	err = client.Connect(ctx)
 	if err != nil {
-		log.Fatal("connect mongo error, ", err.Error())
+		log.Fatal("Connect mongo error, ", err.Error())
 	}
 	database := client.Database(dbstr)
 	return client, database
