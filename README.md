@@ -47,42 +47,46 @@ Overview:
 outputs:
 
 ```
-2019/04/17 18:38:42 Collection details: [test log]
+Collection details: [test log]
 
 Name: test
-Count: 2
+Count: 4
 Indexes:
    _id_, userid_-1
 
 Name: log
-Count: 1544
+Count: 1548
 Indexes:
    _id_
 ```
 
 Migrate:
+
 `
 `migrate-mongo cln test --src mongodb://u:p@127.0.0.1:27017/db1 --dst mongodb://u:p@127.0.0.1:27017/db2`
 
 outputs:
 
 ```
-2019/04/18 10:50:16 Collection details: [test]
+Collection details: [test]
 
 Name: test
-Count: 2
+Count: 4
 Indexes:
    _id_, userid_-1
 
-2019/04/18 10:50:17 Start migration:
+Start migration:
 
-start: test
-done: test, count: 2, elapsed: 428ms
+Done: test 4/4, elapsed: 159ms
 ```
 
 ## Test
 
 TODO
+
+## Tips
+
+* You should avoid db writing while migrating
 
 ## LICENSE
 

@@ -32,6 +32,7 @@ type mdb struct {
 	srcURI, dstURI       string
 	srcClient, dstClient *mongo.Client
 	srcDb, dstDb         *mongo.Database
+	srcClns              map[string]*clnInfo
 }
 
 // NewMDB create a new dbs
@@ -39,6 +40,7 @@ func NewMDB(srcURI string, dstURI string) MDB {
 	m := &mdb{}
 	m.srcURI = srcURI
 	m.dstURI = dstURI
+	m.srcClns = make(map[string]*clnInfo)
 	return m
 }
 
@@ -53,8 +55,8 @@ func (m *mdb) Disconnect() {
 	_ = m.dstClient.Disconnect(ctx)
 }
 
-func (m mdb) Overview(cln ClnOpt) {
-	log.Printf("Collection details: %v", cln.ClnNames)
+func (m *mdb) Overview(cln ClnOpt) {
+	fmt.Printf("Collection details: %v\n", cln.ClnNames)
 	clns := m.collections()
 	// check if collections exist
 	for _, n := range cln.ClnNames {
@@ -62,19 +64,24 @@ func (m mdb) Overview(cln ClnOpt) {
 			log.Fatalf("Collection not found: %v", n)
 		}
 		info := clnDetail(m.srcDb, n)
+		m.srcClns[info.Name] = info
 		info.Print()
 	}
 	fmt.Println()
 }
 
 func (m mdb) Migrate(cln ClnOpt) {
-	log.Println("Start migration:")
+	fmt.Println("Start migration:")
 	fmt.Println()
 	ctx := context.Background()
 	for _, n := range cln.ClnNames {
-		fmt.Printf("start: %s\n", n)
+		// fmt.Printf("start: %s\n", n)
 		start := time.Now()
 		var count int64
+		info, ok := m.srcClns[n]
+		if !ok {
+			log.Fatal("Error source collection not found")
+		}
 		c := m.srcDb.Collection(n)
 		cur, err := c.Find(ctx, bson.M{})
 		defer cur.Close(ctx)
@@ -94,11 +101,12 @@ func (m mdb) Migrate(cln ClnOpt) {
 				log.Fatal("Insert data error: ", err.Error())
 			}
 			count++
-
+			fmt.Print(" Processing: ", n, " ", count, "/", info.Count, "\r")
+			// time.Sleep(time.Second * 1)
 		}
 		t := time.Now()
 		elapsed := t.Sub(start)
-		fmt.Printf("done: %s, count: %d, elapsed: %v\n", n, count, elapsed)
+		fmt.Printf("Done: %s %d/%d, elapsed: %v\n", n, count, info.Count, elapsed)
 		if err := cur.Err(); err != nil {
 			log.Fatal(err)
 		}
