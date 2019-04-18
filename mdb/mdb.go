@@ -25,7 +25,7 @@ type MDB interface {
 	Overview(cln ClnOpt)
 
 	// Migrate do mgrations and return result
-	Migrate(cln ClnOpt, opt migOpt)
+	Migrate(cln ClnOpt)
 }
 
 type mdb struct {
@@ -67,7 +67,43 @@ func (m mdb) Overview(cln ClnOpt) {
 	fmt.Println()
 }
 
-func (m mdb) Migrate(cln ClnOpt, opt migOpt) {
+func (m mdb) Migrate(cln ClnOpt) {
+	log.Println("Start migration:")
+	fmt.Println()
+	ctx := context.Background()
+	for _, n := range cln.ClnNames {
+		fmt.Printf("start: %s\n", n)
+		start := time.Now()
+		var count int64
+		c := m.srcDb.Collection(n)
+		cur, err := c.Find(ctx, bson.M{})
+		defer cur.Close(ctx)
+		if err != nil {
+			log.Fatal("Get collection error: ", err.Error())
+		}
+		for cur.Next(ctx) {
+			elem := &bson.D{}
+			if err := cur.Decode(elem); err != nil {
+				log.Fatal(err)
+			}
+			dCln := m.dstDb.Collection(n)
+			// currently, one by one
+			// next, batch
+			_, err := dCln.InsertOne(ctx, elem)
+			if err != nil {
+				log.Fatal("Insert data error: ", err.Error())
+			}
+			count++
+
+		}
+		t := time.Now()
+		elapsed := t.Sub(start)
+		fmt.Printf("done: %s, count: %d, elapsed: %v\n", n, count, elapsed)
+		if err := cur.Err(); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 }
 
 // get all source db collections

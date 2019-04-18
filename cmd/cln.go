@@ -34,12 +34,19 @@ var clnCmd = &cobra.Command{
 		m.Connect()
 		defer m.Disconnect()
 
-		m.Overview(mdb.ClnOpt{
+		co := mdb.ClnOpt{
 			IfAll:    false,
 			IfIndex:  false,
-			ClnNames: args})
+			ClnNames: args}
+		m.Overview(co)
 		if fShow == true {
 			return
 		}
+		m.Migrate(co)
+		// processing bar
+		// fmt.Print("=======\r")
+		// time.Sleep(time.Second * 3)
+		// fmt.Print("============================\r")
+		// time.Sleep(time.Second * 3)
 	},
 }
