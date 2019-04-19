@@ -12,6 +12,11 @@ type ClnOpt struct {
 	ClnNames []string // collection names
 }
 
+// MigOpt options for migration
+type MigOpt struct {
+	Interval int64
+}
+
 type clnInfo struct {
 	Name    string
 	Count   int64

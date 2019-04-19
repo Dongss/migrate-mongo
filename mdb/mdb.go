@@ -25,7 +25,7 @@ type MDB interface {
 	Overview(cln ClnOpt)
 
 	// Migrate do mgrations and return result
-	Migrate(cln ClnOpt)
+	Migrate(cln ClnOpt, opt MigOpt)
 }
 
 type mdb struct {
@@ -70,12 +70,11 @@ func (m *mdb) Overview(cln ClnOpt) {
 	fmt.Println()
 }
 
-func (m mdb) Migrate(cln ClnOpt) {
+func (m mdb) Migrate(cln ClnOpt, opt MigOpt) {
 	fmt.Println("Start migration:")
 	fmt.Println()
 	ctx := context.Background()
 	for _, n := range cln.ClnNames {
-		// fmt.Printf("start: %s\n", n)
 		start := time.Now()
 		var count int64
 		info, ok := m.srcClns[n]
@@ -102,7 +101,9 @@ func (m mdb) Migrate(cln ClnOpt) {
 			}
 			count++
 			fmt.Print(" Processing: ", n, " ", count, "/", info.Count, "\r")
-			// time.Sleep(time.Second * 1)
+			if opt.Interval != 0 {
+				time.Sleep(time.Millisecond * time.Duration(opt.Interval))
+			}
 		}
 		t := time.Now()
 		elapsed := t.Sub(start)

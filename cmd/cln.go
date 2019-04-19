@@ -9,16 +9,18 @@ import (
 
 // flags variables
 var (
-	fSrc     string
-	fDst     string
-	fIndexes bool
-	fShow    bool
+	fSrc      string
+	fDst      string
+	fInterval int64
+	fIndexes  bool
+	fShow     bool
 )
 
 func init() {
 	clnCmd.PersistentFlags().StringVarP(&fSrc, "src", "s", "mongodb://user:pwd@127.0.0.1/database1", "Source mongodb uri (required)")
 	clnCmd.PersistentFlags().StringVarP(&fDst, "dst", "d", "mongodb://user:pwd@127.0.0.1/database2", "Destination mongodb uri (required)")
 	clnCmd.PersistentFlags().BoolVar(&fIndexes, "index", false, "Include indexes")
+	clnCmd.PersistentFlags().Int64VarP(&fInterval, "interval", "i", 0, "Interval of each single insert, milliseconds")
 	clnCmd.PersistentFlags().BoolVar(&fShow, "show-only", false, "Only show details of source db collection, no migration operation")
 	clnCmd.MarkPersistentFlagRequired("src")
 	clnCmd.MarkPersistentFlagRequired("dst")
@@ -42,11 +44,8 @@ var clnCmd = &cobra.Command{
 		if fShow == true {
 			return
 		}
-		m.Migrate(co)
-		// processing bar
-		// fmt.Print("=======\r")
-		// time.Sleep(time.Second * 3)
-		// fmt.Print("============================\r")
-		// time.Sleep(time.Second * 3)
+		m.Migrate(co, mdb.MigOpt{
+			Interval: fInterval,
+		})
 	},
 }
