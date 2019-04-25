@@ -58,14 +58,23 @@ func (m *mdb) Disconnect() {
 func (m *mdb) Overview(cln ClnOpt) {
 	fmt.Printf("Collection details: %v\n", cln.ClnNames)
 	clns := m.collections()
-	// check if collections exist
-	for _, n := range cln.ClnNames {
-		if con := contains(clns, n); !con {
-			log.Fatalf("Collection not found: %v", n)
+	// all collections
+	if cln.IfAll {
+		for _, n := range clns {
+			info := clnDetail(m.srcDb, n)
+			m.srcClns[info.Name] = info
+			info.Print()
 		}
-		info := clnDetail(m.srcDb, n)
-		m.srcClns[info.Name] = info
-		info.Print()
+	} else {
+		// check if collections exist
+		for _, n := range cln.ClnNames {
+			if con := contains(clns, n); !con {
+				log.Fatalf("Collection not found: %v", n)
+			}
+			info := clnDetail(m.srcDb, n)
+			m.srcClns[info.Name] = info
+			info.Print()
+		}
 	}
 	fmt.Println()
 }
@@ -74,7 +83,16 @@ func (m mdb) Migrate(cln ClnOpt, opt MigOpt) {
 	fmt.Println("Start migration:")
 	fmt.Println()
 	ctx := context.Background()
-	for _, n := range cln.ClnNames {
+	var clns []string
+	if cln.IfAll {
+		for _, n := range m.srcClns {
+			clns = append(clns, n.Name)
+		}
+	} else {
+		clns = cln.ClnNames
+	}
+
+	for _, n := range clns {
 		start := time.Now()
 		var count int64
 		info, ok := m.srcClns[n]
