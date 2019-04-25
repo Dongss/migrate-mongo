@@ -112,7 +112,6 @@ func (m mdb) Migrate(cln ClnOpt, opt MigOpt) {
 			log.Fatal(err)
 		}
 	}
-
 }
 
 // get all source db collections

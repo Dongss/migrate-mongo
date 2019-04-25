@@ -7,9 +7,11 @@ Powered by [MongoDB Go driver](https://github.com/mongodb/mongo-go-driver)
 
 ## Features
 
-* Migrate mongo all data from db to db
-* Migrate mongo data from db to db by specified collections
-* Migrate mongo data include indexes
+* [ ] Migrate mongo all data from db to db
+* [x] Migrate mongo data from db to db by specified collections
+* [ ] Migrate mongo data include indexes
+* [ ] Batch insert for migration
+* [x] Interval between each single intersing for DB load
 
 ## Install
 
