@@ -111,13 +111,15 @@ func (m mdb) Migrate(cln ClnOpt, opt MigOpt) {
 				log.Fatal(err)
 			}
 			dCln := m.dstDb.Collection(n)
-			// currently, one by one
-			// next, batch
-			_, err := dCln.InsertOne(ctx, elem)
-			if err != nil {
-				log.Fatal("Insert data error: ", err.Error())
+			if opt.FBatch != 0 {
+				// TODO: batch
+			} else {
+				_, err := dCln.InsertOne(ctx, elem)
+				if err != nil {
+					log.Fatal("Insert data error: ", err.Error())
+				}
+				count++
 			}
-			count++
 			fmt.Print(" Processing: ", n, " ", count, "/", info.Count, "\r")
 			if opt.Interval != 0 {
 				time.Sleep(time.Millisecond * time.Duration(opt.Interval))

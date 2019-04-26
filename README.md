@@ -9,7 +9,7 @@ Powered by [MongoDB Go driver](https://github.com/mongodb/mongo-go-driver)
 
 * [x] Migrate mongo all data from db to db
 * [x] Migrate mongo data from db to db by specified collections
-* [ ] Migrate mongo data include indexes
+* [ ] Migrate mongo data include indexes, create indexes before inserting data
 * [ ] Batch insert for migration
 * [x] Interval between each single intersing for DB load
 
@@ -39,6 +39,26 @@ Flags:
 
 Use "migrate-mongo [command] --help" for more information about a command.
 ```
+Migration options:
+
+```
+$ migrate-mongo help cln
+
+Migrate specified collections
+
+Usage:
+  migrate-mongo cln <collections> [flags]
+
+Flags:
+      --all            Migrate all collections
+  -b, --batch int32    Batch insert, count of each inserting (default 1)
+  -d, --dst string     Destination mongodb uri (required) (default "mongodb://user:pwd@127.0.0.1/database2")
+  -h, --help           help for cln
+      --index          Include indexes, create indexes before inserting data
+  -i, --interval int   Interval of each single insert, milliseconds
+      --show-only      Only show details of source db collection, no migration operation
+  -s, --src string     Source mongodb uri (required) (default "mongodb://user:pwd@127.0.0.1/database1")
+```
 
 ## Example
 
@@ -64,7 +84,6 @@ Indexes:
 
 Migrate:
 
-`
 `migrate-mongo cln test --src mongodb://u:p@127.0.0.1:27017/db1 --dst mongodb://u:p@127.0.0.1:27017/db2`
 
 outputs:
