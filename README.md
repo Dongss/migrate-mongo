@@ -11,7 +11,7 @@ Powered by [MongoDB Go driver](https://github.com/mongodb/mongo-go-driver)
 * [x] Migrate mongo data from db to db by specified collections
 * [ ] Migrate mongo data include indexes, create indexes before inserting data
 * [x] Batch inserting for migration
-* [x] Interval between each single intersing for DB load
+* [x] Interval between each single intersing
 
 ## Install
 
@@ -84,7 +84,7 @@ Indexes:
 
 Migrate:
 
-`migrate-mongo cln test --src mongodb://u:p@127.0.0.1:27017/db1 --dst mongodb://u:p@127.0.0.1:27017/db2`
+`migrate-mongo cln test test2 --src mongodb://u:p@127.0.0.1:27017/db1 --dst mongodb://u:p@127.0.0.1:27017/db2`
 
 outputs:
 
@@ -96,9 +96,15 @@ Count: 4
 Indexes:
    _id_, userid_-1
 
+Name: test2
+Count: 3
+Indexes:
+   _id_
+
 Start migration:
 
 Done: test 4/4, elapsed: 159ms
+Done: test2 3/3, elapsed: 112ms
 ```
 
 ## Test
