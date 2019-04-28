@@ -89,7 +89,7 @@ Migrate:
 outputs:
 
 ```
-Collection details: [test]
+Collection details: [test test2]
 
 Name: test
 Count: 4
