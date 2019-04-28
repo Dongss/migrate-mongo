@@ -105,25 +105,34 @@ func (m mdb) Migrate(cln ClnOpt, opt MigOpt) {
 		if err != nil {
 			log.Fatal("Get collection error: ", err.Error())
 		}
+		dCln := m.dstDb.Collection(n)
+		var toInsert []interface{}
 		for cur.Next(ctx) {
-			elem := &bson.D{}
+			var elem interface{}
+			elem = &bson.D{}
 			if err := cur.Decode(elem); err != nil {
 				log.Fatal(err)
 			}
-			dCln := m.dstDb.Collection(n)
 			if opt.FBatch != 0 {
-				// TODO: batch
-			} else {
-				_, err := dCln.InsertOne(ctx, elem)
-				if err != nil {
-					log.Fatal("Insert data error: ", err.Error())
+				// TODO: batch insert
+				toInsert = append(toInsert, elem)
+				if int32(len(toInsert)) == opt.FBatch {
+					insertMany(ctx, dCln, toInsert)
+					count += int64(len(toInsert))
+					toInsert = nil
+					insertInterval(n, info.Count, count, opt.Interval)
 				}
+			} else {
+				// single insert
+				insertOne(ctx, dCln, elem)
 				count++
+				insertInterval(n, info.Count, count, opt.Interval)
 			}
-			fmt.Print(" Processing: ", n, " ", count, "/", info.Count, "\r")
-			if opt.Interval != 0 {
-				time.Sleep(time.Millisecond * time.Duration(opt.Interval))
-			}
+		}
+		if opt.FBatch != 0 && len(toInsert) > 0 {
+			insertMany(ctx, dCln, toInsert)
+			count += int64(len(toInsert))
+			insertInterval(n, info.Count, count, opt.Interval)
 		}
 		t := time.Now()
 		elapsed := t.Sub(start)
@@ -131,6 +140,27 @@ func (m mdb) Migrate(cln ClnOpt, opt MigOpt) {
 		if err := cur.Err(); err != nil {
 			log.Fatal(err)
 		}
+	}
+}
+
+func insertMany(ctx context.Context, cln *mongo.Collection, data []interface{}) {
+	_, err := cln.InsertMany(ctx, data)
+	if err != nil {
+		log.Fatal("Insert data error: ", err.Error())
+	}
+}
+
+func insertOne(ctx context.Context, cln *mongo.Collection, data interface{}) {
+	_, err := cln.InsertOne(ctx, data)
+	if err != nil {
+		log.Fatal("Insert data error: ", err.Error())
+	}
+}
+
+func insertInterval(name string, total int64, current int64, interval int64) {
+	fmt.Print(" Processing: ", name, " ", current, "/", total, "\r")
+	if interval != 0 {
+		time.Sleep(time.Millisecond * time.Duration(interval))
 	}
 }
 
