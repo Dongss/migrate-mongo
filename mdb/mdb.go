@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	MongoOpt "go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 // MDB offers mongodb operation support
@@ -164,6 +165,29 @@ func insertInterval(name string, total int64, current int64, interval int64) {
 	}
 }
 
+func createIndex(ctx context.Context, cln *mongo.Collection, index clnIndex) {
+	var keys bsonx.Doc
+	for k, v := range index.Key.Map() {
+		if vv, ok := v.(int32); ok {
+			el := bsonx.Elem{Key: k, Value: bsonx.Int32(vv)}
+			keys = append(keys, el)
+		} else {
+			log.Fatal("indexes error")
+		}
+	}
+	indexView := cln.Indexes()
+	indexName, err := indexView.CreateOne(
+		ctx,
+		mongo.IndexModel{
+			Keys: keys,
+		},
+	)
+	if err != nil {
+		log.Fatal("Create index error: ", err.Error())
+	}
+	fmt.Println(indexName)
+}
+
 // get all source db collections
 func (m mdb) collections() []string {
 	ctx := context.Background()
@@ -205,18 +229,14 @@ func clnDetail(db *mongo.Database, clnName string) *clnInfo {
 		log.Fatal("Get collections error: ", err.Error())
 	}
 
-	var index []string
+	var index []clnIndex
 
 	for cur.Next(ctx) {
-		var elem struct {
-			Key  interface{} `bson:"key"`
-			Name string      `bson:"name"`
-			Ns   string      `bson:"ns"`
-		}
+		var elem clnIndex
 		if err := cur.Decode(&elem); err != nil {
 			log.Fatal("decode error: ", err.Error())
 		} else {
-			index = append(index, elem.Name)
+			index = append(index, elem)
 		}
 	}
 

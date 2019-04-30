@@ -3,6 +3,8 @@ package mdb
 import (
 	"fmt"
 	"strings"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ClnOpt is collection options
@@ -18,15 +20,24 @@ type MigOpt struct {
 	FBatch   int32
 }
 
+type clnIndex struct {
+	Key  primitive.D `bson:"key"`
+	Name string      `bson:"name"`
+	Ns   string      `bson:"ns"`
+}
+
 type clnInfo struct {
 	Name    string
 	Count   int64
-	Indexes []string
+	Indexes []clnIndex
 }
 
 func (c clnInfo) Print() {
 	fmt.Println()
-	// var s string
 	fmt.Printf("Name: %s\nCount: %d\nIndexes:\n", c.Name, c.Count)
-	fmt.Println("  ", strings.Join(c.Indexes, ", "))
+	var s []string
+	for _, v := range c.Indexes {
+		s = append(s, v.Name)
+	}
+	fmt.Println("  ", strings.Join(s, ", "))
 }
