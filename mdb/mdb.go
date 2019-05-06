@@ -107,6 +107,14 @@ func (m mdb) Migrate(cln ClnOpt, opt MigOpt) {
 			log.Fatal("Get collection error: ", err.Error())
 		}
 		dCln := m.dstDb.Collection(n)
+
+		// index
+		if opt.IfIndex {
+			for _, ind := range info.Indexes {
+				createIndex(ctx, dCln, ind)
+			}
+		}
+
 		var toInsert []interface{}
 		for cur.Next(ctx) {
 			var elem interface{}
@@ -114,8 +122,8 @@ func (m mdb) Migrate(cln ClnOpt, opt MigOpt) {
 			if err := cur.Decode(elem); err != nil {
 				log.Fatal(err)
 			}
+			// batch
 			if opt.FBatch != 0 {
-				// TODO: batch insert
 				toInsert = append(toInsert, elem)
 				if int32(len(toInsert)) == opt.FBatch {
 					insertMany(ctx, dCln, toInsert)
@@ -142,6 +150,31 @@ func (m mdb) Migrate(cln ClnOpt, opt MigOpt) {
 			log.Fatal(err)
 		}
 	}
+}
+
+// get all source db collections
+func (m mdb) collections() []string {
+	ctx := context.Background()
+	cur, err := m.srcDb.ListCollections(ctx, bson.M{})
+	defer cur.Close(ctx)
+	if err != nil {
+		log.Fatal("Get collections error: ", err.Error())
+	}
+	var r []string
+	for cur.Next(ctx) {
+		var elem struct {
+			Name string `bson:"name"`
+		}
+		if err := cur.Decode(&elem); err != nil {
+			log.Fatal(err)
+		}
+		r = append(r, elem.Name)
+	}
+
+	if err := cur.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return r
 }
 
 func insertMany(ctx context.Context, cln *mongo.Collection, data []interface{}) {
@@ -176,7 +209,7 @@ func createIndex(ctx context.Context, cln *mongo.Collection, index clnIndex) {
 		}
 	}
 	indexView := cln.Indexes()
-	indexName, err := indexView.CreateOne(
+	_, err := indexView.CreateOne(
 		ctx,
 		mongo.IndexModel{
 			Keys: keys,
@@ -185,32 +218,6 @@ func createIndex(ctx context.Context, cln *mongo.Collection, index clnIndex) {
 	if err != nil {
 		log.Fatal("Create index error: ", err.Error())
 	}
-	fmt.Println(indexName)
-}
-
-// get all source db collections
-func (m mdb) collections() []string {
-	ctx := context.Background()
-	cur, err := m.srcDb.ListCollections(ctx, bson.M{})
-	defer cur.Close(ctx)
-	if err != nil {
-		log.Fatal("Get collections error: ", err.Error())
-	}
-	var r []string
-	for cur.Next(ctx) {
-		var elem struct {
-			Name string `bson:"name"`
-		}
-		if err := cur.Decode(&elem); err != nil {
-			log.Fatal(err)
-		}
-		r = append(r, elem.Name)
-	}
-
-	if err := cur.Err(); err != nil {
-		log.Fatal(err)
-	}
-	return r
 }
 
 // get collection detail

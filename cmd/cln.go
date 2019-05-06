@@ -58,7 +58,7 @@ var clnCmd = &cobra.Command{
 		}
 		m.Migrate(co, mdb.MigOpt{
 			Interval: fInterval,
-			IfIndex:  false,
+			IfIndex:  fIndexes,
 			FBatch:   fBatch,
 		})
 	},
