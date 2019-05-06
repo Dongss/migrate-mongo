@@ -3,8 +3,6 @@ Migrate mongodb collections by streaming way,include data and indexes.
 
 Powered by [MongoDB Go driver](https://github.com/mongodb/mongo-go-driver)
 
-## This project is still on working, not finished.
-
 ## Features
 
 * [x] Migrate mongo all data from db to db
