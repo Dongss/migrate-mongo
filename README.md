@@ -1,4 +1,8 @@
 # migrate-mongo
+
+[![Build Status](https://travis-ci.org/Dongss/migrate-mongo.svg?branch=master)](https://travis-ci.org/Dongss/migrate-mongo)
+
+
 Migrate mongodb collections by streaming way,include data and indexes. 
 
 Powered by [MongoDB Go driver](https://github.com/mongodb/mongo-go-driver)
