@@ -107,7 +107,7 @@ Done: test2 3/3, elapsed: 112ms
 
 ## Test
 
-TODO
+`go test ./...`
 
 ## Tips
 
